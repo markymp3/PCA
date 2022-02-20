@@ -1,0 +1,59 @@
+#import important libraries 
+
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+from sklearn.decomposition import PCA
+
+df = pd.read_csv('mnist_012.csv') #read in the dataset 
+
+#set the x and y axis'
+Y = df.loc[:, '0'] 
+X = df.drop(['0'], axis=1)
+
+df.head() #show the df
+
+X_standard = X - X.mean() #calculate the std dev of the x values and print them 
+X_standard
+
+df_cov = X_standard.cov() # using the built in function, find the covariance of the df
+print(df.shape)
+df_cov.head()
+
+from numpy.linalg import eig # import eigen value and vector module to compute below
+
+eigvalues, eigvectors = eig(df_cov)
+print(eigvalues[:10])
+print(eigvectors.shape)
+
+# Dot product of eigen vectors to achive Principal Component Features
+X_pca = np.dot(X_standard, eigvectors)
+df_pca_calc = pd.DataFrame(X_pca) 
+df_pca_calc.round(2).head()
+
+fig, ax = plt.subplots(1,1, figsize=(16,12))
+# Row masks for each category
+rows_0 = Y==0;
+rows_1 = Y==1; 
+rows_2 = Y==2; 
+
+ax.scatter(df_pca_calc[rows_0.tolist(), 1], df_pca.calc[rows_0.tolist(), 2], c='blue', edgecolor='k', s=120, label='Zero')
+ax.scatter(df_pca.calc[rows_1.tolist(), 1], df_pca.calc[rows_1.tolist(), 2], c='red', edgecolor='k', s=120, label='One')
+ax.scatter(df_pca.calc[rows_2.tolist(), 1], df_pca.calc[rows_2.tolist(), 2], c='green', edgecolor='k', s=120, label='Two')
+
+# Encircle the boundaries
+encircle(df_pca.calc[rows_0.tolist(), 1], df_pca.calc[rows_0.tolist(), 2], ec="blue", fc="none", linewidth=2.5)
+encircle(df_pca.calc[rows_1.tolist(), 1], df_pca.calc[rows_1.tolist(), 2], ec="firebrick", fc="none", linewidth=2.5)
+encircle(df_pca.calc[rows_2.tolist(), 1], df_pca.calc[rows_2.tolist(), 2], ec="green", fc="none", linewidth=2.5)
+
+# Shading
+encircle(df_pca.calc[rows_1.tolist(), 1], df_pca.calc[rows_1.tolist(), 2], ec="k", fc="firebrick", alpha=0.05)
+encircle(df_pca.calc[rows_0.tolist(), 1], df_pca.calc[rows_0.tolist(), 2], ec="k", fc="blue", alpha=0.05)
+encircle(df_pca.calc[rows_2.tolist(), 1], df_pca.calc[rows_2.tolist(), 2], ec="k", fc="green", alpha=0.05)
+
+# Labels
+ax.set_title("MNIST Data for 1, 2 & 3: Scatterplot of First Two PCA directions", fontsize=22)
+ax.set_xlabel("1st Principal Component", fontsize=22)
+ax.set_ylabel("2nd Principal Component", fontsize=22)
+ax.legend(calc='best', title='Transaction Type', fontsize=16)
+plt.show();
