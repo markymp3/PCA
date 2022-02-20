@@ -1,0 +1,72 @@
+# import important libraries and packages
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+from sklearn.decomposition import PCA
+
+pd.set_option('max_rows', 500)
+pd.set_option('max_columns', 500)
+np.set_printoptions(suppress=True)
+
+df = pd.read_csv('mnist_012.csv')
+
+Y = df.loc[:, '0']
+X = df.drop(['0'], axis=1)
+
+print(df.shape)
+df.head()
+
+pca = PCA()
+df_pca = pca.fit_transform(X=X)
+
+# Store as dataframe and print
+df_pca = pd.DataFrame(df_pca)
+print(df_pca.shape)  #> (3147, 784)
+df_pca.round(2).head()
+
+# Principal Components Weights (Eigenvectors)
+df_pca_loadings = pd.DataFrame(pca.components_)
+df_pca_loadings.head()
+
+print(pca.explained_variance_ratio_.round(2)[:10])
+
+# Plot the clustering tendency
+from scipy.spatial import ConvexHull
+
+# The encircle function enables encircling the points within the cluster.
+def encircle(x,y, ax=None, **kw):
+    if not ax: ax=plt.gca()
+    p = np.c_[x,y]
+    hull = ConvexHull(p)
+    poly = plt.Polygon(p[hull.vertices,:], **kw)
+    ax.add_patch(poly)
+ 
+# Scatterplot against PC1 and PC2
+fig, ax = plt.subplots(1,1, figsize=(16,12))
+
+# Row masks for each category
+rows_0 = Y==0;
+rows_1 = Y==1; 
+rows_2 = Y==2; 
+
+# Plot
+ax.scatter(df_pca.loc[rows_0.tolist(), 1], df_pca.loc[rows_0.tolist(), 2], c='blue', edgecolor='k', s=120, label='Zero')
+ax.scatter(df_pca.loc[rows_1.tolist(), 1], df_pca.loc[rows_1.tolist(), 2], c='red', edgecolor='k', s=120, label='One')
+ax.scatter(df_pca.loc[rows_2.tolist(), 1], df_pca.loc[rows_2.tolist(), 2], c='green', edgecolor='k', s=120, label='Two')
+
+# Encircle the boundaries
+encircle(df_pca.loc[rows_0.tolist(), 1], df_pca.loc[rows_0.tolist(), 2], ec="blue", fc="none", linewidth=2.5)
+encircle(df_pca.loc[rows_1.tolist(), 1], df_pca.loc[rows_1.tolist(), 2], ec="firebrick", fc="none", linewidth=2.5)
+encircle(df_pca.loc[rows_2.tolist(), 1], df_pca.loc[rows_2.tolist(), 2], ec="green", fc="none", linewidth=2.5)
+
+# Shading
+encircle(df_pca.loc[rows_1.tolist(), 1], df_pca.loc[rows_1.tolist(), 2], ec="k", fc="firebrick", alpha=0.05)
+encircle(df_pca.loc[rows_0.tolist(), 1], df_pca.loc[rows_0.tolist(), 2], ec="k", fc="blue", alpha=0.05)
+encircle(df_pca.loc[rows_2.tolist(), 1], df_pca.loc[rows_2.tolist(), 2], ec="k", fc="green", alpha=0.05)
+
+# Labels
+ax.set_title("MNIST Data for 1, 2 & 3: Scatterplot of First Two PCA directions", fontsize=22)
+ax.set_xlabel("1st Principal Component", fontsize=22)
+ax.set_ylabel("2nd Principal Component", fontsize=22)
+ax.legend(loc='best', title='Transaction Type', fontsize=16)
+plt.show();
